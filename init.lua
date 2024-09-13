@@ -93,6 +93,8 @@ vim.g.maplocalleader = ' '
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
 
+vim.g.disable_autoformat = true
+
 -- [[ Setting options ]]
 -- See `:help vim.opt`
 -- NOTE: You can change these options as you wish!
@@ -102,7 +104,7 @@ vim.g.have_nerd_font = false
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -154,6 +156,16 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
+--vim.opt.expandtab = true -- Use spaces instead of tabs
+vim.opt.shiftround = true -- Round indent
+vim.opt.shiftwidth = 2 -- Size of an indent
+vim.opt.smartindent = true -- Insert indents automatically
+vim.opt.tabstop = 2 -- Number of spaces tabs count for
+
+vim.keymap.set('n', '<leader>bn', '<cmd>tabnew<CR>', { desc = 'Buffer [N]ew' })
+vim.keymap.set('n', '<leader>bd', '<cmd>bd!<CR>', { desc = 'Buffer [D]elete' })
+vim.keymap.set('n', '<leader>fj', '<cmd>set filetype=json<CR>', { desc = 'Set filetype [J]SON' })
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -176,10 +188,10 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 -- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!"<CR>')
+vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!"<CR>')
+vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!"<CR>')
+vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!"<CR>')
 
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
@@ -226,7 +238,7 @@ vim.opt.rtp:prepend(lazypath)
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
-  'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
+  --'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
 
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
@@ -281,6 +293,8 @@ require('lazy').setup({
 
       -- Document existing key chains
       require('which-key').register {
+        ['<leader>f'] = { name = '[F]ile', _ = 'which_key_ignore' },
+        ['<leader>b'] = { name = '[B]uffer', _ = 'which_key_ignore' },
         ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
         ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
         ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
@@ -353,11 +367,9 @@ require('lazy').setup({
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
-        -- defaults = {
-        --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-        --   },
-        -- },
+        defaults = {
+          file_ignore_patterns = { 'node_modules\\.*' },
+        },
         -- pickers = {}
         extensions = {
           ['ui-select'] = {
@@ -575,8 +587,7 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
-        -- tsserver = {},
-        --
+        --tsserver = {},
 
         lua_ls = {
           -- cmd = {...},
@@ -630,34 +641,45 @@ require('lazy').setup({
     lazy = false,
     keys = {
       {
-        '<leader>f',
+        '<leader>bf',
         function()
           require('conform').format { async = true, lsp_fallback = true }
         end,
         mode = '',
-        desc = '[F]ormat buffer',
+        desc = 'Buffer [F]ormat',
       },
     },
     opts = {
-      notify_on_error = false,
+      notify_on_error = true,
       format_on_save = function(bufnr)
-        -- Disable "format_on_save lsp_fallback" for languages that don't
-        -- have a well standardized coding style. You can add additional
-        -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
-        return {
-          timeout_ms = 500,
-          lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
-        }
+        return {}
       end,
+      --        -- Disable "format_on_save lsp_fallback" for languages that don't
+      --        -- have a well standardized coding style. You can add additional
+      --        -- languages here or re-enable it for the disabled ones.
+      --        local disable_filetypes = { c = true, cpp = true }
+      --        return {
+      --          timeout_ms = 500,
+      --          lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
+      --        }
+      --      end,
       formatters_by_ft = {
         lua = { 'stylua' },
-        -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
-        --
-        -- You can use a sub-list to tell conform to run *until* a formatter
-        -- is found.
-        -- javascript = { { "prettierd", "prettier" } },
+        javascript = { 'prettierd' },
+        javascriptreact = { 'prettierd' },
+        typescript = { 'prettierd' },
+        typescriptreact = { 'prettierd' },
+        vue = { 'prettierd' },
+        css = { 'prettierd' },
+        scss = { 'prettierd' },
+        less = { 'prettierd' },
+        html = { 'prettierd' },
+        json = { 'prettierd' },
+        jsonc = { 'prettierd' },
+        yaml = { 'prettierd' },
+        markdown = { 'prettierd' },
+        graphql = { 'prettierd' },
+        handlebars = { 'prettierd' },
       },
     },
   },
@@ -779,6 +801,13 @@ require('lazy').setup({
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
     'folke/tokyonight.nvim',
+    opts = {
+      transparent = true,
+      styles = {
+        sidebars = 'transparent',
+        floats = 'transparent',
+      },
+    },
     priority = 1000, -- Make sure to load this before all the other start plugins.
     init = function()
       -- Load the colorscheme here.
@@ -793,6 +822,16 @@ require('lazy').setup({
 
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
+
+  {
+    'akinsho/flutter-tools.nvim',
+    lazy = false,
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'stevearc/dressing.nvim', -- optional for vim.ui.select
+    },
+    config = true,
+  },
 
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
@@ -811,6 +850,25 @@ require('lazy').setup({
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
       require('mini.surround').setup()
+
+      local animate = require 'mini.animate'
+      animate.setup {
+        cursor = {
+          enable = false,
+        },
+        scroll = {
+          timing = animate.gen_timing.linear { duration = 25, unit = 'total' },
+          subscroll = animate.gen_subscroll.equal {
+            predicate = function(total_scroll)
+              if animate.mouse_scrolled then
+                animate.mouse_scrolled = false
+                return false
+              end
+              return total_scroll > 1
+            end,
+          },
+        },
+      }
 
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
